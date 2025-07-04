@@ -1,6 +1,6 @@
 package lii.authservice.controller;
 
-import lii.authservice.domain.User;
+import lii.authservice.model.User;
 import lii.authservice.dto.AuthResponse;
 import lii.authservice.dto.LoginRequest;
 import lii.authservice.dto.RegisterRequest;
