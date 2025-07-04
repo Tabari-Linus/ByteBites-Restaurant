@@ -3,11 +3,11 @@ package lii.authservice;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ActiveProfiles;
 
-@SpringBootTest
-class AuthServiceApplicationTests {
+@ActiveProfiles("test")
+class AuthServiceApplicationTests extends AbstractPostgresTest {
 
     @Test
     void contextLoads() {
-    }
 
+    }
 }
