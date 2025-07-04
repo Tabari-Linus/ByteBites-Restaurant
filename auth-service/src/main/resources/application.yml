@@ -8,9 +8,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
+        include: health, info
