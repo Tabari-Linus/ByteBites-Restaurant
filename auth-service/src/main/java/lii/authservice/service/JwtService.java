@@ -16,9 +16,12 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
+    @Value("${jwt.access-token-expiration-ms}")
+    private long accessTokenExpiration;
 
-    public String generateToken(UserDetails userDetails) {
+    
+
+    public String generateToken(UserDetails userDetails, long expiration) {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
