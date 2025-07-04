@@ -7,3 +7,6 @@ spring:
         git:
           uri: https://github.com/Tabari-Linus/bytebites-config-repo
 
+
+server:
+  port: 8888
