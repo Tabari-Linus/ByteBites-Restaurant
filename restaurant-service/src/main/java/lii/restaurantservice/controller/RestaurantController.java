@@ -4,6 +4,7 @@ import lii.restaurantservice.dto.CreateMenuItemRequest;
 import lii.restaurantservice.dto.CreateRestaurantRequest;
 import lii.restaurantservice.model.MenuItem;
 import lii.restaurantservice.model.Restaurant;
+import lii.restaurantservice.repository.MenuItemRepository;
 import lii.restaurantservice.repository.RestaurantRepository;
 import lii.restaurantservice.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class RestaurantController {
 
     private final RestaurantRepository restaurantRepository;
+    private final MenuItemRepository menuItemRepository;
     private final RestaurantService restaurantService;
 
     @GetMapping
@@ -60,5 +62,20 @@ public class RestaurantController {
 
         restaurantService.addMenuItem(restaurantId, newItem, userId);
         return ResponseEntity.ok().build();
+    }
+
+
+    @GetMapping("/{restaurantId}")
+    public ResponseEntity<Restaurant> getRestaurantById(@PathVariable UUID restaurantId) {
+        return restaurantRepository.findById(restaurantId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/menu-items/{menuItemId}")
+    public ResponseEntity<MenuItem> getMenuItemById(@PathVariable UUID menuItemId) {
+        return menuItemRepository.findById(menuItemId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
