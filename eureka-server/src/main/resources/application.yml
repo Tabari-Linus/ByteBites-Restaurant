@@ -1,6 +1,11 @@
 spring:
   application:
     name: eureka-server
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+
 
 server:
   port: 8761
