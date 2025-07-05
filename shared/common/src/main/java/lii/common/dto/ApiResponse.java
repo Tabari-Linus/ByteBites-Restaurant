@@ -1,4 +1,4 @@
-package lii.common;
+package lii.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
