@@ -1,3 +1,6 @@
+server:
+  port: 8888
+
 spring:
   application:
     name: config-server
@@ -5,15 +8,29 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/Tabari-Linus/bytebites-config-repo
-
-
-server:
-  port: 8888
+          uri: file://${user.home}/bytebites-config
+          clone-on-start: true
+          default-label: main
+        default-application-name: application
+  profiles:
+    active: native
 
 eureka:
-  instance:
-    prefer-ip-address: true
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh,configprops
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
