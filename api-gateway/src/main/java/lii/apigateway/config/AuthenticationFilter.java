@@ -10,12 +10,12 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import java.util.Date;
+
 import java.util.List;
-import java.util.logging.Logger;
 
 @Component
 @Slf4j
@@ -26,7 +26,8 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
     private static final List<String> UNSECURED_PATHS = List.of(
             "/auth/register",
-            "/auth/login"
+            "/auth/login",
+            "/auth/refresh"
     );
 
     public AuthenticationFilter() {
@@ -51,18 +52,38 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 return onError(exchange, HttpStatus.UNAUTHORIZED);
             }
 
+
             String token = authHeader.substring(7);
             try {
                 validateToken(token);
-                Logger.getLogger(AuthenticationFilter.class.getName()).info("Token is valid");
             } catch (Exception e) {
                 log.error("Error validating token", e);
                 return onError(exchange, HttpStatus.UNAUTHORIZED);
             }
 
-            return chain.filter(exchange);
+            try {
+                Claims claims = validateAndExtractClaims(token);
+                ServerWebExchange modifiedExchange = exchange.mutate()
+                        .request(r -> r.header("X-User-Id", claims.getSubject())
+                                .header("X-User-Roles", claims.get("roles", String.class)))
+                        .build();
+                return chain.filter(modifiedExchange);
+            } catch (Exception e) {
+                log.error("Error extracting claims from token", e);
+                return onError(exchange, HttpStatus.UNAUTHORIZED);
+            }
+
         };
     }
+
+    private Claims validateAndExtractClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
 
     private Mono<Void> onError(ServerWebExchange exchange, HttpStatus status) {
         exchange.getResponse().setStatusCode(status);

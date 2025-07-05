@@ -1,4 +1,4 @@
-package lii.authservice.domain;
+package lii.authservice.model;
 
 import jakarta.persistence.*;
 import java.util.UUID;
