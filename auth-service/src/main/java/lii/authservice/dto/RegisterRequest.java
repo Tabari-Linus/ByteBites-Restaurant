@@ -1,3 +1,5 @@
 package lii.authservice.dto;
 
-public record RegisterRequest(String email, String password) {}
+import lii.authservice.model.User;
+
+public record RegisterRequest(String email, String password, User.Role role) {}
