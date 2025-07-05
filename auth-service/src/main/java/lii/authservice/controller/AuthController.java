@@ -52,7 +52,23 @@ public class AuthController {
         Authentication authenticationResponse =
                 this.authenticationManager.authenticate(authenticationRequest);
         User user = (User) authenticationResponse.getPrincipal();
-        String jwt = jwtService.generateToken(user);
-        return ResponseEntity.ok(new AuthResponse(jwt));
+        String accessToken = jwtService.generateAccessToken(user);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getEmail());
+
+        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken()));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        return refreshTokenService.findByToken(request.refreshToken())
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    refreshTokenService.deleteByUserId(user.getId());
+                    RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getEmail());
+                    String accessToken = jwtService.generateAccessToken(user);
+                    return ResponseEntity.ok(new AuthResponse(accessToken, newRefreshToken.getToken()));
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
     }
 }
