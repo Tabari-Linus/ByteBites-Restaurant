@@ -4,9 +4,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.util.Date;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -19,15 +22,24 @@ public class JwtService {
     @Value("${jwt.access-token-expiration-ms}")
     private long accessTokenExpiration;
 
-    
-
     public String generateToken(UserDetails userDetails, long expiration) {
+        Map<String, Object> claims = Map.of(
+                "roles", userDetails.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList())
+        );
+
         return Jwts.builder()
+                .claims(claims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String generateAccessToken(UserDetails userDetails) {
+        return generateToken(userDetails, accessTokenExpiration);
     }
 
     public String extractUsername(String token) {
