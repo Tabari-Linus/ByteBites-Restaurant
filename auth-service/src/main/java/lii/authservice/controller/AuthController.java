@@ -1,11 +1,14 @@
 package lii.authservice.controller;
 
+import lii.authservice.dto.RefreshTokenRequest;
+import lii.authservice.model.RefreshToken;
 import lii.authservice.model.User;
 import lii.authservice.dto.AuthResponse;
 import lii.authservice.dto.LoginRequest;
 import lii.authservice.dto.RegisterRequest;
 import lii.authservice.repository.UserRepository;
 import lii.authservice.service.JwtService;
+import lii.authservice.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,6 +30,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
@@ -36,7 +40,7 @@ public class AuthController {
         User user = new User();
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setRole(User.Role.ROLE_CUSTOMER);
+        user.setRole(request.role() != null ? request.role() : User.Role.ROLE_CUSTOMER);
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully!");
     }
