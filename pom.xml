@@ -18,22 +18,22 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- Spring Boot & Cloud Versions -->
+
         <spring-boot.version>3.3.5</spring-boot.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
 
-        <!-- Database & Messaging -->
+
         <postgresql.version>42.7.4</postgresql.version>
         <kafka.version>3.8.0</kafka.version>
 
-        <!-- Security & Utils -->
+
         <jjwt.version>0.12.6</jjwt.version>
         <mapstruct.version>1.6.2</mapstruct.version>
 
-        <!-- Testing -->
+
         <testcontainers.version>1.20.2</testcontainers.version>
 
-        <!-- Plugins -->
+
         <maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.1</maven-failsafe-plugin.version>
     </properties>
@@ -51,7 +51,7 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Spring Boot BOM -->
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -60,7 +60,7 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Spring Cloud BOM -->
+
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -69,14 +69,14 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Database -->
+
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
             </dependency>
 
-            <!-- JWT -->
+
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-api</artifactId>
@@ -93,14 +93,13 @@
                 <version>${jjwt.version}</version>
             </dependency>
 
-            <!-- MapStruct -->
+
             <dependency>
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct</artifactId>
                 <version>${mapstruct.version}</version>
             </dependency>
 
-            <!-- Testcontainers -->
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers-bom</artifactId>
@@ -109,7 +108,7 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Internal modules -->
+
             <dependency>
                 <groupId>com.bytebites</groupId>
                 <artifactId>bytebites-common</artifactId>
