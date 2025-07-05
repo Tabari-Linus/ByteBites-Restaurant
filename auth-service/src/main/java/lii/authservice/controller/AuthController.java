@@ -1,24 +1,19 @@
 package lii.authservice.controller;
 
-import lii.authservice.dto.RefreshTokenRequest;
+import lii.authservice.dto.*;
 import lii.authservice.model.RefreshToken;
 import lii.authservice.model.User;
-import lii.authservice.dto.AuthResponse;
-import lii.authservice.dto.LoginRequest;
-import lii.authservice.dto.RegisterRequest;
 import lii.authservice.repository.UserRepository;
 import lii.authservice.service.JwtService;
 import lii.authservice.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -70,5 +65,10 @@ public class AuthController {
                     return ResponseEntity.ok(new AuthResponse(accessToken, newRefreshToken.getToken()));
                 })
                 .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+    }
+
+    @GetMapping("/my-details")
+    public ResponseEntity<UserDetailsResponse> getUserDetails() {
+        return ResponseEntity.ok(jwtService.getDetails( ));
     }
 }
