@@ -18,6 +18,9 @@ public class GatewayConfig {
                 .route("auth-service", r -> r.path("/auth/**")
                         .filters(f -> f.filter(authenticationFilter.apply(new AuthenticationFilter.Config())))
                         .uri("lb://auth-service"))
+                .route("restaurant-service", r -> r.path("/api/restaurants/**")
+                        .filters(f -> f.filter(authenticationFilter.apply(new AuthenticationFilter.Config())))
+                        .uri("lb://restaurant-service"))
                 .build();
     }
 }
