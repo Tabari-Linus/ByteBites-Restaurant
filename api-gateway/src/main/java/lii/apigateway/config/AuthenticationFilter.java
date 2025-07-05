@@ -52,21 +52,27 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 return onError(exchange, HttpStatus.UNAUTHORIZED);
             }
 
+
             String token = authHeader.substring(7);
             try {
-                Claims claims = validateAndExtractClaims(token);
-
-                ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                        .header("X-User-Email", claims.getSubject())
-                        .header("X-User-Roles", claims.get("roles", List.class).toString())
-                        .build();
-
-                return chain.filter(exchange.mutate().request(mutatedRequest).build());
-
+                validateToken(token);
             } catch (Exception e) {
                 log.error("Error validating token", e);
                 return onError(exchange, HttpStatus.UNAUTHORIZED);
             }
+
+            try {
+                Claims claims = validateAndExtractClaims(token);
+                ServerWebExchange modifiedExchange = exchange.mutate()
+                        .request(r -> r.header("X-User-Id", claims.getSubject())
+                                .header("X-User-Roles", claims.get("roles", String.class)))
+                        .build();
+                return chain.filter(modifiedExchange);
+            } catch (Exception e) {
+                log.error("Error extracting claims from token", e);
+                return onError(exchange, HttpStatus.UNAUTHORIZED);
+            }
+
         };
     }
 
