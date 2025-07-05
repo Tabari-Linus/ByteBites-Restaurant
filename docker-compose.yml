@@ -11,5 +11,18 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  restaurant-db:
+    image: postgres:16-alpine
+    container_name: bytebites-restaurant-db
+    environment:
+      POSTGRES_USER: ${db_username}
+      POSTGRES_PASSWORD: ${db_password}
+      POSTGRES_DB: ${restaurant_db_name}
+    ports:
+      - "5433:5432"
+    volumes:
+      - restaurant-data:/var/lib/postgresql/data
+
 volumes:
   postgres-data:
+  restaurant-data:
