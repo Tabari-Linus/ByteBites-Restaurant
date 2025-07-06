@@ -1,0 +1,4 @@
+test:
+  property: value
+server:
+  port: 8888
