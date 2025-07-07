@@ -1,0 +1,76 @@
+
+spring:
+  application:
+    name: api-gateway
+  config:
+    import: optional:configserver:http://localhost:8888
+  profiles:
+    active: local
+
+---
+server:
+  port: 8080
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: auth-public
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/register,/auth/login,/auth/oauth2/**
+
+        - id: auth-protected
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth/**
+          filters:
+            - JwtAuthenticationFilter
+
+        - id: restaurant-service
+          uri: lb://restaurant-service
+          predicates:
+            - Path=/api/restaurants/**
+          filters:
+            - JwtAuthenticationFilter
+
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - JwtAuthenticationFilter
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+bytebites:
+  jwt:
+    secret: 18A2B3D4F5971C5E7F2A6D9B0C8E1A4F28B5E6D7G8H9J0K1L2M3N4P5Q6R7
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
