@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -32,6 +33,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
+            String path = request.getPath().toString();
+            String method = request.getMethod().toString();
+
+            if (config != null && config.getPublicPaths() != null && isPublicPath(path, method, config)) {
+                return chain.filter(exchange);
+            }
+
 
             if (!containsAuthorizationHeader(request)) {
                 logger.warn("Missing Authorization header for request: {}", request.getPath());
@@ -63,6 +71,37 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         };
     }
 
+    private boolean isPublicPath(String path, String method, Config config) {
+        if (config.getPublicPaths() == null) {
+            return false;
+        }
+
+        return config.getPublicPaths().stream()
+                .anyMatch(publicPath -> {
+                    String[] parts = publicPath.split(" ");
+                    String pathPattern = parts[0];
+                    String allowedMethod = parts.length > 1 ? parts[1] : "*";
+
+                    String normalizedPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+                    String normalizedPattern = pathPattern.endsWith("/") ? pathPattern.substring(0, pathPattern.length() - 1) : pathPattern;
+
+                    return normalizedPath.equals(normalizedPattern) &&
+                            (allowedMethod.equals("*") || allowedMethod.equals(method));
+                });
+    }
+
+
+
+    public static class Config {
+        private final List<String> publicPaths = new ArrayList<>();
+
+        public List<String> getPublicPaths() {
+            return publicPaths;
+        }
+
+    }
+
+
     private boolean containsAuthorizationHeader(ServerHttpRequest request) {
         return request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION);
     }
@@ -82,7 +121,4 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
         return response.setComplete();
     }
 
-    public static class Config {
-
-    }
 }
