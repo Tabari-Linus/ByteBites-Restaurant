@@ -1,6 +1,7 @@
 package com.example.authservice.controller;
 
 import com.example.authservice.dto.*;
+import com.example.authservice.enums.RoleName;
 import com.example.authservice.exception.GlobalExceptionHandler;
 import com.example.authservice.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,7 +53,8 @@ class AuthControllerTest {
                 "test@example.com",
                 "password123",
                 "John",
-                "Doe"
+                "Doe",
+                RoleName.ROLE_CUSTOMER
         );
 
         UserInfo userInfo = new UserInfo(
@@ -184,7 +186,8 @@ class AuthControllerTest {
                 "existing@example.com",
                 "password123",
                 "John",
-                "Doe"
+                "Doe",
+                RoleName.ROLE_CUSTOMER
         );
 
         when(userService.register(any()))
