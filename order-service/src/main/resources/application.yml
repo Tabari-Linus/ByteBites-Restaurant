@@ -19,9 +19,9 @@ spring:
       on-profile: local
 
   datasource:
-    url: jdbc:postgresql://localhost:5434/order_db
-    username: mrlii
-    password: postgresdev
+    url: jdbc:postgresql://localhost:5434/${ order_db_name }
+    username: ${db_username}
+    password: { postgresdev }
     driver-class-name: org.postgresql.Driver
 
   jpa:
