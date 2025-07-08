@@ -1,4 +1,3 @@
-
 spring:
   application:
     name: api-gateway
@@ -31,21 +30,24 @@ spring:
           predicates:
             - Path=/auth/**
           filters:
-            - JwtAuthenticationFilter
+            - name: JwtAuthenticationFilter
 
         - id: restaurant-service
           uri: lb://restaurant-service
           predicates:
             - Path=/api/restaurants/**
           filters:
-            - JwtAuthenticationFilter
+            - name: JwtAuthenticationFilter
+              args:
+                publicPaths:
+                  - /api/restaurants GET
 
         - id: order-service
           uri: lb://order-service
           predicates:
             - Path=/api/orders/**
           filters:
-            - JwtAuthenticationFilter
+            - name: JwtAuthenticationFilter
 
       globalcors:
         corsConfigurations:
