@@ -1,5 +1,7 @@
 package com.example.authservice.dto;
 
+import com.example.authservice.enums.RoleName;
+import com.example.authservice.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -17,5 +19,7 @@ public record RegisterRequest(
         String firstName,
 
         @NotBlank(message = "Last name is required")
-        String lastName
+        String lastName,
+
+        RoleName role
 ) {}
