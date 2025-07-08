@@ -1,6 +1,6 @@
 .env
 ./env_variables.sh
-
+env_variables.sh
 
 ../*.HELP.md
 ./../*.HELP.md
