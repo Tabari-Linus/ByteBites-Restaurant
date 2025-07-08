@@ -71,6 +71,7 @@ public class UserService {
         }
     }
 
+
     private User createUserWithDefaultRole(RegisterRequest request) throws RoleNotFoundException {
         User user = new User(
                 request.email(),
@@ -78,8 +79,19 @@ public class UserService {
                 request.firstName(),
                 request.lastName()
         );
-        Role customerRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
-                .orElseThrow(() -> new RoleNotFoundException("Default role not found"));
+
+        Role customerRole;
+        if(request.role() != null && request.role() == RoleName.ROLE_ADMIN) {
+            customerRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
+                    .orElseThrow(() -> new RoleNotFoundException("Enter a correct role name for admin"));
+        } else if (request.role() != null && request.role() == RoleName.ROLE_RESTAURANT_OWNER)
+        {
+            customerRole = roleRepository.findByName(RoleName.ROLE_RESTAURANT_OWNER)
+                    .orElseThrow(() -> new RoleNotFoundException("Enter a correct role name for owner"));
+        } else {
+            customerRole = roleRepository.findByName(RoleName.ROLE_CUSTOMER)
+                    .orElseThrow(() -> new RoleNotFoundException("Default role not found"));
+        }
         user.addRole(customerRole);
         return user;
     }
