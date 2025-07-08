@@ -50,6 +50,9 @@ spring:
             - Path=/api/orders/**
           filters:
             - name: JwtAuthenticationFilter
+              args:
+                publicPaths:
+                  - /api/restaurants GET
 
       globalcors:
         corsConfigurations:
