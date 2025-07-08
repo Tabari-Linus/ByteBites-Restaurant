@@ -45,7 +45,7 @@ class UserServiceTest {
 
     @Test
     void shouldRegisterNewUser() {
-        var request = new RegisterRequest("test@example.com", "password", "Test", "User");
+        var request = new RegisterRequest("test@example.com", "password", "Test", "User", RoleName.ROLE_CUSTOMER);
         var customerRole = new Role();
         customerRole.setName(RoleName.ROLE_CUSTOMER);
 
