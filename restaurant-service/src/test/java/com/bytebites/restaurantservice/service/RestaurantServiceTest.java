@@ -75,7 +75,7 @@ class RestaurantServiceTest {
                 "Updated Name", null, null, null, null, null
         );
         Restaurant mockRestaurant = createMockRestaurant();
-        mockRestaurant.setOwnerId(ownerId); // Set the owner ID on the mock restaurant
+        mockRestaurant.setOwnerId(ownerId); 
         UUID differentUserId = UUID.randomUUID();
 
         when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(mockRestaurant));
