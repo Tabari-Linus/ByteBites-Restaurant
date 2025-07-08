@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: order-service
+  config:
+    import: optional:configserver:http://localhost:8888
+  profiles:
+    active: local
+
+
+---
+server:
+  port: 8083
+
+spring:
+  application:
+    name: order-service
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:postgresql://localhost:5434/order_db
+    username: mrlii
+    password: postgresdev
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    baseline-on-migrate: true
+    enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+bytebites:
+  services:
+    restaurant:
+      url: http://localhost:8082
+      timeout: 5000
+
+  events:
+    order:
+      topic: order-events
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    com.bytebites.order: DEBUG
+    org.springframework.security: DEBUG
