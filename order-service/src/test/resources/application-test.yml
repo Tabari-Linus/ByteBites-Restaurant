@@ -21,11 +21,21 @@ spring:
     console:
       enabled: true
 
+
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
 bytebites:
   jwt:
     secret: test-secret-key-for-testing-purposes-only-not-for-production
     expiration: 86400000
     refresh-expiration: 604800000
+  kafka:
+    topics:
+      order-events: order-events
 
 logging:
   level:

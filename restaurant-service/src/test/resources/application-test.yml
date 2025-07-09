@@ -27,6 +27,10 @@ bytebites:
     expiration: 86400000
     refresh-expiration: 604800000
 
+  kafka:
+    topics:
+      restaurant-events: restaurant-events
+
 logging:
   level:
     org.springframework.security: DEBUG
