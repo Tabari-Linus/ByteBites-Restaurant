@@ -38,6 +38,21 @@ spring:
     baseline-on-migrate: true
     enabled: true
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        acks: all
+        retries: 3
+        enable.idempotence: true
+
+bytebites:
+  kafka:
+    topics:
+      restaurant-events: restaurant-events
+
 eureka:
   client:
     service-url:
