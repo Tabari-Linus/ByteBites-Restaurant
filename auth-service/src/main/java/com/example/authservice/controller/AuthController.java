@@ -38,11 +38,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         logger.info("Login request for email: {}", request.email());
 
         try {
-            JwtResponse response = userService.login(request);
+            LoginResponse response = userService.login(request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             logger.error("Login failed for email: {}, error: {}", request.email(), e.getMessage());
