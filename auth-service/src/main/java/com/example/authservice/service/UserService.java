@@ -96,7 +96,7 @@ public class UserService {
         return user;
     }
 
-    public JwtResponse login(LoginRequest request) throws AccountDisabledException {
+    public LoginResponse login(LoginRequest request) throws AccountDisabledException {
         logger.info("Attempting login for email: {}", request.email());
         User user = userRepository.findByEmailWithRoles(request.email())
                 .orElseThrow(() -> new BadCredentialsException(INVALID_CREDENTIALS_MESSAGE));
@@ -105,7 +105,14 @@ public class UserService {
         updateLastLogin(user);
 
         logger.info("User logged in successfully: {}", user.getId());
-        return jwtService.generateTokenResponse(user);
+        JwtResponse loginData = jwtService.generateTokenResponse(user);
+        return( new LoginResponse(
+                loginData.accessToken(),
+                loginData.refreshToken(),
+                loginData.tokenType()
+        ));
+
+
     }
 
     private void validateLoginAttempt(User user, String password) throws AccountDisabledException {
