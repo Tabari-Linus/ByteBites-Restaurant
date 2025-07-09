@@ -39,8 +39,7 @@ public class KafkaConsumerConfig {
         configProps.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30000);
 
         
-        configProps.put(JsonDeserializer.TRUSTED_PACKAGES,
-                "com.bytebites.notificationservice.event,com.bytebites.orderservice.event,com.bytebites.restaurantservice.event");
+        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         configProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, Object.class);
 
