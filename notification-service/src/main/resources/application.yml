@@ -1,0 +1,91 @@
+spring:
+  application:
+    name: notification-service
+  config:
+    import: optional:configserver:http://localhost:8888
+  profiles:
+    active: local
+
+---
+server:
+  port: 8084
+
+spring:
+  config:
+    activate:
+      on-profile: local
+  application:
+    name: notification-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/${notification_db_name}
+    username: ${db_username}
+    password: ${db_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    baseline-on-migrate: true
+    enabled: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.bytebites.notificationservice.event,com.bytebites.orderservice.event,com.bytebites.restaurantservice.event"
+        auto.offset.reset: earliest
+        enable.auto.commit: false
+        max.poll.records: 10
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+bytebites:
+  kafka:
+    topics:
+      order-events: order-events
+      restaurant-events: restaurant-events
+
+  email:
+    enabled: false
+    from: ""
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    com.bytebites.notification: DEBUG
+    org.springframework.kafka: DEBUG
