@@ -99,21 +99,32 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<FieldErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        List<FieldValidationError> validationErrors = ex.getBindingResult()
+    public ResponseEntity<FieldErrorResponse> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex) {
+
+        var fieldError = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(error -> new FieldValidationError(error.getField(), error.getDefaultMessage()))
-                .collect(Collectors.toList());
+                .findFirst()
+                .orElse(null);
 
-        FieldErrorResponse errorResponse = new FieldErrorResponse(
+        if (fieldError == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new FieldErrorResponse(
+                            HttpStatus.BAD_REQUEST.value(),
+                            "unknown",
+                            "Validation failed"));
+        }
+
+        var response = new FieldErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
-                "Validation failed for one or more fields.",
-                validationErrors
+                fieldError.getField(),
+                fieldError.getDefaultMessage()
         );
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(response);
     }
+
 
 
 }
