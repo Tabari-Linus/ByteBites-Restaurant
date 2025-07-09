@@ -27,32 +27,52 @@ git clone https://github.com/Tabari-Linus/ByteBites-Restaurant
 cd ByteBites-Restaurant
 ./mvnw clean compile
 ````
-2. **Docker Setup**
+
+3. **Docker Setup**
 ```bash
 # Build all services needed for local development
-docker-compose up -d postgres-auth postgres-restaurant postgres-order kafka zookeeper
+docker-compose up -d
 ````
-3. **Run services**
+4. **Run services in this order**
 ```bash
-# Start the services in the following order
-# Make sure to run these commands in the root directory of the project
-cd eureka-server && ./mvnw spring-boot:run
-cd ../config-server && ./mvnw spring-boot:run
-cd ../api-gateway && ./mvnw spring-boot:run
-````
+# Terminal 1: Discovery Server
+cd discovery-server
+./mvnw clean package spring-boot:run
 
-```bash
-# Start the services in the following order
-# Make sure to run these commands in the root directory of the project
-cd auth-service && ./mvnw spring-boot:run
-cd ../restaurant-service && ./mvnw spring-boot:run
-cd ../order-service && ./mvnw spring-boot:run
-cd ../notification-service && ./mvnw spring-boot:run
+# Terminal 2: Config Server
+cd config-server  
+./mvnw clean package spring-boot:run
 
+# Terminal 3: API Gateway
+cd api-gateway
+./mvnw clean package spring-boot:run
 
+# Terminal 4: Auth Service
+cd auth-service
+./mvnw clean package spring-boot:run
+
+# Terminal 5: Restaurant Service (with Kafka)
+cd restaurant-service
+./mvnw clean package spring-boot:run
+
+# Terminal 6: Order Service (with Kafka)
+cd services/order-service
+./mvnw clean package spring-boot:run
+
+# Terminal 7: Notification Service (Kafka Consumer)
+cd services/notification-service
+./mvnw clean package spring-boot:run
 ```
 
-## 📈 Monitoring
+5. ## 📈 Monitoring
 - Health Endpoints: /actuator/health
 - Metrics: /actuator/metrics
 - Info: /actuator/inf
+
+```bash
+# Verify Kafka is running
+docker logs bytebites-kafka
+
+Check kafka UI Dashboard
+# Access http://localhost:8090 to view topics and messages
+```
