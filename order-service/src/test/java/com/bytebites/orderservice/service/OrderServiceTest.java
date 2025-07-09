@@ -5,6 +5,7 @@ import com.bytebites.orderservice.dto.OrderItemRequest;
 import com.bytebites.orderservice.dto.OrderResponse;
 import com.bytebites.orderservice.dto.UpdateOrderStatusRequest;
 import com.bytebites.orderservice.enums.OrderStatus;
+import com.bytebites.orderservice.event.OrderEventPublisher;
 import com.bytebites.orderservice.exception.OrderNotFoundException;
 import com.bytebites.orderservice.mapper.OrderMapper;
 import com.bytebites.orderservice.model.Order;
@@ -43,7 +44,7 @@ class OrderServiceTest {
     private RestaurantServiceClient restaurantServiceClient;
 
     @Mock
-    private EventPublishingService eventPublishingService;
+    private OrderEventPublisher orderEventPublisher;
 
     private OrderService orderService;
 
@@ -58,7 +59,7 @@ class OrderServiceTest {
         restaurantId = UUID.randomUUID();
         orderId = UUID.randomUUID();
         orderService = new OrderService(orderRepository, orderMapper, orderValidationService,
-                restaurantServiceClient, eventPublishingService);
+                restaurantServiceClient,orderEventPublisher);
     }
 
 
