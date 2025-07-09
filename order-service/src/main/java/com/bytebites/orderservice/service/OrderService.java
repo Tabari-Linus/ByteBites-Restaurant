@@ -2,6 +2,7 @@ package com.bytebites.orderservice.service;
 
 import com.bytebites.orderservice.dto.*;
 import com.bytebites.orderservice.enums.OrderStatus;
+import com.bytebites.orderservice.event.OrderEventPublisher;
 import com.bytebites.orderservice.exception.InvalidOrderStateException;
 import com.bytebites.orderservice.exception.OrderNotFoundException;
 import com.bytebites.orderservice.exception.UnauthorizedOperationException;
@@ -31,18 +32,18 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final OrderValidationService orderValidationService;
     private final RestaurantServiceClient restaurantServiceClient;
-    private final EventPublishingService eventPublishingService;
+    private final OrderEventPublisher orderEventPublisher;
 
     public OrderService(OrderRepository orderRepository,
                         OrderMapper orderMapper,
                         OrderValidationService orderValidationService,
                         RestaurantServiceClient restaurantServiceClient,
-                        EventPublishingService eventPublishingService) {
+                        OrderEventPublisher orderEventPublisher) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.orderValidationService = orderValidationService;
         this.restaurantServiceClient = restaurantServiceClient;
-        this.eventPublishingService = eventPublishingService;
+        this.orderEventPublisher = orderEventPublisher;
     }
 
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -65,7 +66,7 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         
-        eventPublishingService.publishOrderPlacedEvent(savedOrder);
+        orderEventPublisher.publishOrderPlacedEvent(savedOrder);
 
         logger.info("Order created successfully with ID: {}", savedOrder.getId());
         return orderMapper.toResponse(savedOrder);
@@ -155,13 +156,12 @@ public class OrderService {
         Order updatedOrder = orderRepository.save(order);
 
         
-        eventPublishingService.publishOrderStatusChangedEvent(updatedOrder, previousStatus, userId);
+        orderEventPublisher.publishOrderStatusChangedEvent(updatedOrder, previousStatus, userId);
 
         logger.info("Order status updated successfully: {} -> {}", previousStatus, request.status());
         return orderMapper.toResponse(updatedOrder);
     }
 
-    // Method lacks @PreAuthorize annotation
     public void cancelOrder(UUID orderId, UUID userId) {
         logger.info("Cancelling order: {} by user: {}", orderId, userId);
 
@@ -184,7 +184,7 @@ public class OrderService {
         orderRepository.save(order);
 
         
-        eventPublishingService.publishOrderStatusChangedEvent(order, previousStatus, userId);
+        orderEventPublisher.publishOrderStatusChangedEvent(order, previousStatus, userId);
 
         logger.info("Order cancelled successfully: {}", orderId);
     }
