@@ -4,6 +4,7 @@ import com.bytebites.restaurantservice.dto.CreateRestaurantRequest;
 import com.bytebites.restaurantservice.dto.RestaurantResponse;
 import com.bytebites.restaurantservice.dto.UpdateRestaurantRequest;
 import com.bytebites.restaurantservice.enums.RestaurantStatus;
+import com.bytebites.restaurantservice.event.RestaurantEventPublisher;
 import com.bytebites.restaurantservice.exception.UnauthorizedOperationException;
 import com.bytebites.restaurantservice.mapper.RestaurantMapper;
 import com.bytebites.restaurantservice.model.Restaurant;
@@ -35,6 +36,9 @@ class RestaurantServiceTest {
     @Mock
     private SecurityService securityService;
 
+    @Mock
+    private RestaurantEventPublisher restaurantEventPublisher;
+
     private RestaurantService restaurantService;
 
     private UUID ownerId;
@@ -44,7 +48,7 @@ class RestaurantServiceTest {
     void setUp() {
         ownerId = UUID.randomUUID();
         restaurantId = UUID.randomUUID();
-        restaurantService = new RestaurantService(restaurantRepository, restaurantMapper, securityService);
+        restaurantService = new RestaurantService(restaurantRepository, restaurantMapper, securityService, restaurantEventPublisher );
     }
 
     @Test
