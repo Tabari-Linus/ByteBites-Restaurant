@@ -47,6 +47,15 @@ public class RestaurantServiceClient {
         }
     }
 
+    public RestaurantInfo getRestaurant(UUID restaurantId) {
+        try {
+            return getRestaurantAsync(restaurantId).get();
+        } catch (Exception e) {
+            logger.error("Error in synchronous restaurant call: {}", e.getMessage());
+            return fallbackGetRestaurant(restaurantId, e);
+        }
+    }
+
     public List<MenuItemInfo> getMenuItems(UUID restaurantId) {
         logger.info("Fetching menu items for restaurant: {}", restaurantId);
 
