@@ -25,12 +25,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<JwtResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<SuccessMessage> register(@Valid @RequestBody RegisterRequest request) {
         logger.info("Registration request for email: {}", request.email());
 
         try {
             JwtResponse response = userService.register(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessMessage("User registered successfully"));
         } catch (RuntimeException e) {
             logger.error("Registration failed for email: {}, error: {}", request.email(), e.getMessage());
             throw e;
@@ -38,11 +38,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         logger.info("Login request for email: {}", request.email());
 
         try {
-            JwtResponse response = userService.login(request);
+            LoginResponse response = userService.login(request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             logger.error("Login failed for email: {}, error: {}", request.email(), e.getMessage());
