@@ -27,6 +27,19 @@ git clone https://github.com/Tabari-Linus/ByteBites-Restaurant
 cd ByteBites-Restaurant
 ./mvnw clean compile
 ````
+2. **Create .env file**
+```bash
+ create file with the files 
+ db_username
+ db_password
+ auth_db_name
+ restaurant_db_name
+ order_db_name
+ notification_db_name
+ jwt_secret_key
+ EMAIL_USERNAME
+ EMAIL_PASSWORD
+```
 
 3. **Docker Setup**
 ```bash
@@ -63,7 +76,125 @@ cd services/order-service
 cd services/notification-service
 ./mvnw clean package spring-boot:run
 ```
+5. # End-to-End Execution flow
+```bash
+# Register restaurant owner
+curl -X POST http://localhost:8080/auth/admin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@gmail.com", 
+    "password": "password123",
+    "firstName": "admin",
+    "lastName": "coder",
+    "role": "ROLE_ADMIN"
+}'
 
+# Register restaurant owner
+curl -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "owner@pizzapalace.com",
+    "password": "password123",
+    "firstName": "John",
+    "lastName": "Pizza"
+    "role": "ROLE_RESTAURANT_OWNER"
+  }'
+  
+  # Create restaurant 
+curl -X POST http://localhost:8080/api/restaurants \
+  -H "Authorization: Bearer $JWT_OWNER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Pizza Palace",
+    "description": "Best pizza in town",
+    "address": "123 Main St, Pizza City",
+    "phone": "+1234567890",
+    "email": "contact@pizzapalace.com"
+  }'
+
+# Save the restaurant ID from response
+RESTAURANT_ID="550e8400-e29b-41d4-a716-446655440000"
+
+# Admin Approve Restaurant
+ADMIN_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+# Add menu item
+curl -X POST "http://localhost:8080/api/restaurants/$RESTAURANT_ID/menu" \
+  -H "Authorization: Bearer ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Margherita Pizza",
+    "description": "Classic Italian pizza with fresh mozzarella",
+    "price": 14.99,
+    "category": "MAIN_COURSE"
+  }'
+# Save the menu item ID from response
+MENU_ITEM_ID="550e8400-e29b-41d4-a716-446655440001"
+
+# Register customer
+curl -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "customer@example.com",
+    "password": "password123",
+    "firstName": "Jane",
+    "lastName": "Customer"
+  }'
+
+# Save the customer JWT token
+JWT_CUSTOMER_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# Place order - this will publish OrderPlacedEvent
+curl -X POST http://localhost:8080/api/orders \
+  -H "Authorization: Bearer $JWT_CUSTOMER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "restaurantId": "'$RESTAURANT_ID'",
+    "deliveryAddress": "456 Customer St, Customer City",
+    "customerNotes": "Please ring doorbell twice",
+    "items": [
+      {
+        "menuItemId": "'$MENU_ITEM_ID'",
+        "quantity": 2,
+        "specialInstructions": "Extra cheese please"
+      }
+    ]
+  }'
+
+# Save the order ID from response
+ORDER_ID="550e8400-e29b-41d4-a716-446655440002"
+
+# Restaurant owner confirms order - this will publish OrderStatusChangedEvent
+curl -X PUT "http://localhost:8080/api/orders/$ORDER_ID/status" \
+  -H "Authorization: Bearer $JWT_OWNER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "CONFIRMED"
+  }'
+
+# Update to preparing
+curl -X PUT "http://localhost:8080/api/orders/$ORDER_ID/status" \
+  -H "Authorization: Bearer $JWT_OWNER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "PREPARING"
+  }'
+
+# Update to ready
+curl -X PUT "http://localhost:8080/api/orders/$ORDER_ID/status" \
+  -H "Authorization: Bearer $JWT_OWNER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "READY"
+  }'
+
+# Update to delivered
+curl -X PUT "http://localhost:8080/api/orders/$ORDER_ID/status" \
+  -H "Authorization: Bearer $JWT_OWNER_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "DELIVERED"
+  }'
+```
 5. ## 📈 Monitoring
 - Health Endpoints: /actuator/health
 - Metrics: /actuator/metrics
