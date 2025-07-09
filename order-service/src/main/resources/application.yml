@@ -37,6 +37,18 @@ spring:
     baseline-on-migrate: true
     enabled: true
 
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        acks: all
+        retries: 3
+        enable.idempotence: true
+
+
 eureka:
   client:
     service-url:
@@ -52,9 +64,9 @@ bytebites:
       url: http://localhost:8082
       timeout: 5000
 
-  events:
-    order:
-      topic: order-events
+  kafka:
+    topics:
+      order-events: order-events
 
 management:
   endpoints:
