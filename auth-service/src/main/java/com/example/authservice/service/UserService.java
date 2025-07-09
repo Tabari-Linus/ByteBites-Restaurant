@@ -53,24 +53,19 @@ public class UserService {
     }
 
     private void validateRegistrationRequest(RegisterRequest request) throws ValidationException {
-        StringBuilder errors = new StringBuilder();
-
-        if (request.firstName() == null) {
-            errors.append("First name is required. ");
+        if (request.email() == null || request.email().isEmpty()) {
+            throw new ValidationException("Email cannot be null or empty");
         }
-        if (request.lastName() == null) {
-            errors.append("Last name is required. ");
+        if (request.password() == null || request.password().length() < 8) {
+            throw new ValidationException("Password must be at least 8 characters long");
         }
-        if (request.firstName() != null && request.firstName().matches("[0-9]+") ||
-                request.lastName() != null && request.lastName().matches("[0-9]+")) {
-            errors.append("First name and last name cannot contain numbers. ");
+        if (request.firstName() == null || request.firstName().isEmpty()) {
+            throw new ValidationException("First name cannot be null or empty");
         }
-
-        if (errors.length() > 0) {
-            throw new ValidationException(errors.toString().trim());
+        if (request.lastName() == null || request.lastName().isEmpty()) {
+            throw new ValidationException("Last name cannot be null or empty");
         }
     }
-
 
     private User createUserWithDefaultRole(RegisterRequest request) throws RoleNotFoundException {
         User user = new User(
@@ -81,11 +76,10 @@ public class UserService {
         );
 
         Role customerRole;
-        if(request.role() != null && request.role() == RoleName.ROLE_ADMIN) {
+        if (request.role() != null && request.role() == RoleName.ROLE_ADMIN) {
             customerRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
                     .orElseThrow(() -> new RoleNotFoundException("Enter a correct role name for admin"));
-        } else if (request.role() != null && request.role() == RoleName.ROLE_RESTAURANT_OWNER)
-        {
+        } else if (request.role() != null && request.role() == RoleName.ROLE_RESTAURANT_OWNER) {
             customerRole = roleRepository.findByName(RoleName.ROLE_RESTAURANT_OWNER)
                     .orElseThrow(() -> new RoleNotFoundException("Enter a correct role name for owner"));
         } else {
@@ -106,13 +100,11 @@ public class UserService {
 
         logger.info("User logged in successfully: {}", user.getId());
         JwtResponse loginData = jwtService.generateTokenResponse(user);
-        return( new LoginResponse(
+        return new LoginResponse(
                 loginData.accessToken(),
                 loginData.refreshToken(),
                 loginData.tokenType()
-        ));
-
-
+        );
     }
 
     private void validateLoginAttempt(User user, String password) throws AccountDisabledException {
@@ -145,13 +137,8 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserInfo getCurrentUser(UUID userId) throws UserNotFoundException {
         logger.info("Getting current user info for ID: {}", userId);
-        User user = null;
-        try {
-            user = userRepository.findById(userId)
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
-        } catch (UserNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         return new UserInfo(
                 user.getId(),
