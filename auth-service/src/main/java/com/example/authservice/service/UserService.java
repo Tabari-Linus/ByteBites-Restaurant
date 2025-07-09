@@ -105,7 +105,14 @@ public class UserService {
         updateLastLogin(user);
 
         logger.info("User logged in successfully: {}", user.getId());
-        return jwtService.generateTokenResponse(user);
+        JwtResponse loginData = jwtService.generateTokenResponse(user);
+        return( new LoginResponse(
+                loginData.accessToken(),
+                loginData.refreshToken(),
+                loginData.tokenType()
+        ));
+
+
     }
 
     private void validateLoginAttempt(User user, String password) throws AccountDisabledException {
