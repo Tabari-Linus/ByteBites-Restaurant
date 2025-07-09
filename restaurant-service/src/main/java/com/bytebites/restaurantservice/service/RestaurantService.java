@@ -4,6 +4,7 @@ import com.bytebites.restaurantservice.dto.CreateRestaurantRequest;
 import com.bytebites.restaurantservice.dto.RestaurantResponse;
 import com.bytebites.restaurantservice.dto.UpdateRestaurantRequest;
 import com.bytebites.restaurantservice.enums.RestaurantStatus;
+import com.bytebites.restaurantservice.event.RestaurantEventPublisher;
 import com.bytebites.restaurantservice.exception.RestaurantNotFoundException;
 import com.bytebites.restaurantservice.exception.UnauthorizedOperationException;
 import com.bytebites.restaurantservice.mapper.RestaurantMapper;
@@ -31,13 +32,16 @@ public class RestaurantService {
     private final RestaurantRepository restaurantRepository;
     private final RestaurantMapper restaurantMapper;
     private final SecurityService securityService;
+    private final RestaurantEventPublisher restaurantEventPublisher;
 
     public RestaurantService(RestaurantRepository restaurantRepository,
                              RestaurantMapper restaurantMapper,
-                             SecurityService securityService) {
+                             SecurityService securityService,
+                             RestaurantEventPublisher restaurantEventPublisher) {
         this.restaurantRepository = restaurantRepository;
         this.restaurantMapper = restaurantMapper;
         this.securityService = securityService;
+        this.restaurantEventPublisher = restaurantEventPublisher;
     }
 
     @PreAuthorize("hasRole('RESTAURANT_OWNER') or hasRole('ADMIN')")
@@ -50,7 +54,10 @@ public class RestaurantService {
         }
 
         Restaurant restaurant = restaurantMapper.toEntity(request, ownerId);
+        restaurant.setStatus(RestaurantStatus.ACTIVE);
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
+
+        restaurantEventPublisher.publishRestaurantCreatedEvent(savedRestaurant);
 
         logger.info("Restaurant created successfully with ID: {}", savedRestaurant.getId());
         return restaurantMapper.toResponse(savedRestaurant);
