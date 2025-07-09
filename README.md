@@ -27,6 +27,19 @@ git clone https://github.com/Tabari-Linus/ByteBites-Restaurant
 cd ByteBites-Restaurant
 ./mvnw clean compile
 ````
+2. **Create .env file**
+```bash
+ create file with the files 
+ db_username
+ db_password
+ auth_db_name
+ restaurant_db_name
+ order_db_name
+ notification_db_name
+ jwt_secret_key
+ EMAIL_USERNAME
+ EMAIL_PASSWORD
+```
 
 3. **Docker Setup**
 ```bash
@@ -76,3 +89,6 @@ docker logs bytebites-kafka
 Check kafka UI Dashboard
 # Access http://localhost:8090 to view topics and messages
 ```
+
+# Kafka Ui to show message brokers in effect
+![Kafka Dashboard](docs/images/Kafka%20UI.png)
