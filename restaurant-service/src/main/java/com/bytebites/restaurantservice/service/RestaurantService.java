@@ -115,6 +115,23 @@ public class RestaurantService {
         return restaurantMapper.toResponse(updatedRestaurant);
     }
 
+    public RestaurantResponse updateRestaurantStatus(UUID id, UpdateRestaurantRequest request, UUID currentUserId) {
+        logger.info("Updating restaurant: {} by user: {}", id, currentUserId);
+
+        Restaurant restaurant = restaurantRepository.findById(id)
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + id));
+
+        if (!securityService.isAdmin(List.of(currentUserId.toString()))) {
+            throw new UnauthorizedOperationException("You are not authorized to update this restaurant");
+        }
+
+        restaurantMapper.updateEntityFromRequest(request, restaurant);
+        Restaurant updatedRestaurant = restaurantRepository.save(restaurant);
+
+        logger.info("Restaurant updated successfully: {}", id);
+        return restaurantMapper.toResponse(updatedRestaurant);
+    }
+
     public void deleteRestaurant(UUID id, UUID currentUserId) {
         logger.info("Deleting restaurant: {} by user: {}", id, currentUserId);
 
