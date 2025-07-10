@@ -56,6 +56,9 @@ public class UserService {
         if (request.email() == null || request.email().isEmpty()) {
             throw new ValidationException("Email cannot be null or empty");
         }
+        if (userRepository.existsByEmail(request.email())) {
+            throw new UserAlreadyExistsException("User with email " + request.email() + " already exists");
+        }
         if (request.password() == null || request.password().length() < 8) {
             throw new ValidationException("Password must be at least 8 characters long");
         }
