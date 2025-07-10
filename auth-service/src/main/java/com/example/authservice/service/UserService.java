@@ -45,11 +45,15 @@ public class UserService {
 
     public JwtResponse register(RegisterRequest request) throws UserAlreadyExistsException, ValidationException {
         logger.info("Registering new user with email: {}", request.email());
-        validateRegistrationRequest(request);
-        User user = createUserWithDefaultRole(request);
-        User savedUser = userRepository.save(user);
-        logger.info("User registered successfully with ID: {}", savedUser.getId());
-        return jwtService.generateTokenResponse(savedUser);
+        try {
+            validateRegistrationRequest(request);
+            User user = createUserWithDefaultRole(request);
+            User savedUser = userRepository.save(user);
+            logger.info("User registered successfully with ID: {}", savedUser.getId());
+            return jwtService.generateTokenResponse(savedUser);
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void validateRegistrationRequest(RegisterRequest request) throws ValidationException {
@@ -98,16 +102,21 @@ public class UserService {
         User user = userRepository.findByEmailWithRoles(request.email())
                 .orElseThrow(() -> new BadCredentialsException(INVALID_CREDENTIALS_MESSAGE));
 
-        validateLoginAttempt(user, request.password());
-        updateLastLogin(user);
+        try {
+            validateLoginAttempt(user, request.password());
+            updateLastLogin(user);
 
-        logger.info("User logged in successfully: {}", user.getId());
-        JwtResponse loginData = jwtService.generateTokenResponse(user);
-        return new LoginResponse(
-                loginData.accessToken(),
-                loginData.refreshToken(),
-                loginData.tokenType()
-        );
+            logger.info("User logged in successfully: {}", user.getId());
+            JwtResponse loginData = jwtService.generateTokenResponse(user);
+            return new LoginResponse(
+                    loginData.accessToken(),
+                    loginData.refreshToken(),
+                    loginData.tokenType()
+            );
+        }catch (RuntimeException e) {
+            logger.error("Login failed for email: {}, error: {}", request.email(), e.getMessage());
+            throw e;
+        }
     }
 
     private void validateLoginAttempt(User user, String password) throws AccountDisabledException {
@@ -133,8 +142,12 @@ public class UserService {
             refreshTokenRepository.delete(refreshToken);
             throw new TokenExpiredException("Refresh token is expired");
         }
-
-        return jwtService.generateTokenResponse(refreshToken.getUser());
+        try {
+            return jwtService.generateTokenResponse(refreshToken.getUser());
+        } catch (RuntimeException e) {
+            logger.error("Token refresh failed: {}", e.getMessage());
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -142,21 +155,30 @@ public class UserService {
         logger.info("Getting current user info for ID: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        return new UserInfo(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getRoles().stream()
-                        .map(role -> role.getName().toString())
-                        .collect(java.util.stream.Collectors.toSet())
-        );
+        try {
+            return new UserInfo(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getRoles().stream()
+                            .map(role -> role.getName().toString())
+                            .collect(java.util.stream.Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            logger.error("Get current user failed for ID: {}, error: {}", userId, e.getMessage());
+            throw e;
+        }
     }
 
     public void logout(String refreshToken) {
         logger.info("Logging out user");
-        refreshTokenRepository.findByToken(refreshToken)
-                .ifPresent(refreshTokenRepository::delete);
+        try {
+            refreshTokenRepository.findByToken(refreshToken)
+                    .ifPresent(refreshTokenRepository::delete);
+        } catch (RuntimeException e) {
+            logger.error("Logout failed: {}", e.getMessage());
+            throw e;
+        }
     }
 }
