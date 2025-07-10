@@ -9,6 +9,7 @@ import com.example.authservice.model.User;
 import com.example.authservice.repository.RefreshTokenRepository;
 import com.example.authservice.repository.RoleRepository;
 import com.example.authservice.repository.UserRepository;
+import jdk.jshell.spi.ExecutionControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -169,6 +170,14 @@ public class UserService {
             logger.error("Get current user failed for ID: {}, error: {}", userId, e.getMessage());
             throw e;
         }
+    }
+
+    public java.util.Set<String> getRoles(UUID userId) throws UserNotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return user.getRoles().stream()
+                .map(role -> role.getName().toString())
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     public void logout(String refreshToken) {
