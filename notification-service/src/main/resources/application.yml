@@ -76,16 +76,53 @@ bytebites:
       restaurant-events: restaurant-events
 
   email:
-    enabled: false
-    from: ""
+    enabled: true
+    from: tabarishadow@gmail.com
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      email-service:
+        sliding-window-size: 8
+        minimum-number-of-calls: 4
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 2
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - org.springframework.mail.MailException
+          - java.net.ConnectException
+          - java.util.concurrent.TimeoutException
+
+  retry:
+    instances:
+      email-service:
+        max-attempts: 3
+        wait-duration: 2s
+        exponential-backoff-multiplier: 2
+        enable-exponential-backoff: true
+        retry-exceptions:
+          - org.springframework.mail.MailException
+          - java.net.ConnectException
+
+      order-event-processing:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 1.5
+        retry-exceptions:
+          - java.lang.RuntimeException
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus,circuitbreakers,circuitbreakerevents,retryevents
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:
     com.bytebites.notification: DEBUG
     org.springframework.kafka: DEBUG
+    io.github.resilience4j: DEBUG
