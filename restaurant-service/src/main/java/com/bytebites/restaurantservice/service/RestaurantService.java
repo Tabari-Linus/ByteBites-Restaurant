@@ -5,6 +5,7 @@ import com.bytebites.restaurantservice.dto.RestaurantResponse;
 import com.bytebites.restaurantservice.dto.UpdateRestaurantRequest;
 import com.bytebites.restaurantservice.enums.RestaurantStatus;
 import com.bytebites.restaurantservice.event.RestaurantEventPublisher;
+import com.bytebites.restaurantservice.exception.RestaurantAlreadyExit;
 import com.bytebites.restaurantservice.exception.RestaurantNotFoundException;
 import com.bytebites.restaurantservice.exception.UnauthorizedOperationException;
 import com.bytebites.restaurantservice.mapper.RestaurantMapper;
