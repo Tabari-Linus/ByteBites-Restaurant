@@ -28,6 +28,22 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      restaurant-service:
+        sliding-window-size: 5
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 1s
+        permitted-number-of-calls-in-half-open-state: 2
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - com.bytebites.orderservice.exception.RestaurantValidationException
+          - java.util.concurrent.TimeoutException
+          - java.net.ConnectException
+
+
 bytebites:
   jwt:
     secret: test-secret-key-for-testing-purposes-only-not-for-production
@@ -36,8 +52,12 @@ bytebites:
   kafka:
     topics:
       order-events: order-events
+  services:
+    restaurant:
+      url: http://localhost:8082
 
 logging:
   level:
     org.springframework.security: DEBUG
     com.example.authservice: DEBUG
+    io.github.resilience4j: DEBUG
