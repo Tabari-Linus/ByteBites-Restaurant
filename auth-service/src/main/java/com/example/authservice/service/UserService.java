@@ -44,14 +44,14 @@ public class UserService {
         this.jwtService = jwtService;
     }
 
-    public JwtResponse register(RegisterRequest request) throws UserAlreadyExistsException, ValidationException {
+    public SuccessMessage register(RegisterRequest request) throws UserAlreadyExistsException, ValidationException {
         logger.info("Registering new user with email: {}", request.email());
         try {
             validateRegistrationRequest(request);
             User user = createUserWithDefaultRole(request);
             User savedUser = userRepository.save(user);
             logger.info("User registered successfully with ID: {}", savedUser.getId());
-            return jwtService.generateTokenResponse(savedUser);
+            return new SuccessMessage("User registered successfully") ;
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }
