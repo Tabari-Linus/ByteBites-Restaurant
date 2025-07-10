@@ -31,6 +31,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(RestaurantAlreadyExit.class)
+    public ResponseEntity<ErrorResponse> handleRestaurantAlreadyExit(RestaurantAlreadyExit e) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(MenuItemNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleMenuItemNotFound(MenuItemNotFoundException e) {
         logger.error("Menu item not found: {}", e.getMessage());
