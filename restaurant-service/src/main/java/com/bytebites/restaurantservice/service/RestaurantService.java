@@ -48,13 +48,13 @@ public class RestaurantService {
     public RestaurantResponse createRestaurant(CreateRestaurantRequest request, UUID ownerId) {
         logger.info("Creating restaurant: {} for owner: {}", request.name(), ownerId);
 
-        
-        if (restaurantRepository.existsByOwnerIdAndName(ownerId, request.name())) {
-            throw new RuntimeException("Restaurant with name '" + request.name() + "' already exists");
+
+        if (restaurantRepository.existsByOwnerIdAndName(ownerId, request.name())){
+            throw new RestaurantAlreadyExit("Restaurant already exists for this owner");
         }
 
         Restaurant restaurant = restaurantMapper.toEntity(request, ownerId);
-        restaurant.setStatus(RestaurantStatus.ACTIVE);
+        restaurant.setStatus(RestaurantStatus.PENDING_APPROVAL);
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
 
         restaurantEventPublisher.publishRestaurantCreatedEvent(savedRestaurant);
