@@ -31,7 +31,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/restaurants").permitAll()
                         .requestMatchers("/api/restaurants/*/menu").permitAll() 
                         .requestMatchers("/api/restaurants/*/menu/*").permitAll()
-                        .requestMatchers(HttpMethod.PUT,"/api/restaurants/*/status").hasRole("ADMIN")
+                        .requestMatchers("/api/restaurants/*/status").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilter(requestHeaderAuthenticationFilter())
