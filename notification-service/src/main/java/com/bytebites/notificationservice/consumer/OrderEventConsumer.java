@@ -5,6 +5,7 @@ import com.bytebites.notificationservice.event.OrderStatusChangedEvent;
 import com.bytebites.notificationservice.service.NotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -48,11 +49,11 @@ public class OrderEventConsumer {
             switch (eventType) {
                 case "OrderPlaced":
                     OrderPlacedEvent orderPlacedEvent = convertToOrderPlacedEvent(eventMap);
-                    handleOrderPlacedEvent(orderPlacedEvent);
+                    handleOrderPlacedEventWithRetry(orderPlacedEvent);
                     break;
                 case "OrderStatusChanged":
                     OrderStatusChangedEvent statusChangedEvent = convertToOrderStatusChangedEvent(eventMap);
-                    handleOrderStatusChangedEvent(statusChangedEvent);
+                    handleOrderStatusChangedEventWithRetry(statusChangedEvent);
                     break;
                 default:
                     logger.warn("Unknown event type received: {}", eventType);
@@ -85,18 +86,45 @@ public class OrderEventConsumer {
         }
     }
 
-    private void handleOrderPlacedEvent(OrderPlacedEvent event) {
-        logger.info("Processing OrderPlacedEvent: orderId={}, customerId={}, restaurantId={}",
-                event.orderId(), event.customerId(), event.restaurantId());
-
-        notificationService.sendOrderPlacedNotificationToCustomer(event);
-        notificationService.sendOrderPlacedNotificationToRestaurant(event);
-    }
-
-    private void handleOrderStatusChangedEvent(OrderStatusChangedEvent event) {
-        logger.info("Processing OrderStatusChangedEvent: orderId={}, status={}->{}",
+    @Retry(name = "order-event-processing", fallbackMethod = "fallbackOrderStatusChangedEvent")
+    private void handleOrderStatusChangedEventWithRetry(OrderStatusChangedEvent event) {
+        logger.info("Processing OrderStatusChangedEvent with retry: orderId={}, status={}->{}",
                 event.orderId(), event.previousStatus(), event.newStatus());
 
+        
         notificationService.sendOrderStatusChangedNotification(event);
+    }
+
+    
+    public void fallbackOrderPlacedEvent(OrderPlacedEvent event, Exception ex) {
+        logger.error("Failed to process OrderPlacedEvent after retries: orderId={}, error: {}",
+                event.orderId(), ex.getMessage());
+
+        
+        saveFailedEventProcessing("OrderPlacedEvent", event.orderId().toString(), ex.getMessage());
+    }
+
+    public void fallbackOrderStatusChangedEvent(OrderStatusChangedEvent event, Exception ex) {
+        logger.error("Failed to process OrderStatusChangedEvent after retries: orderId={}, error: {}",
+                event.orderId(), ex.getMessage());
+
+        
+        saveFailedEventProcessing("OrderStatusChangedEvent", event.orderId().toString(), ex.getMessage());
+    }
+
+    private void saveFailedEventProcessing(String eventType, String orderId, String error) {
+        logger.warn("Saving failed event processing: type={}, orderId={}, error={}", eventType, orderId, error);
+        
+    }
+    @Retry(name = "order-event-processing", fallbackMethod = "fallbackOrderPlacedEvent")
+    private void handleOrderPlacedEventWithRetry(OrderPlacedEvent event) {
+        logger.info("Processing OrderPlacedEvent with retry: orderId={}, customerId={}, restaurantId={}",
+                event.orderId(), event.customerId(), event.restaurantId());
+
+        
+        notificationService.sendOrderPlacedNotificationToCustomer(event);
+
+        
+        notificationService.sendOrderPlacedNotificationToRestaurant(event);
     }
 }
