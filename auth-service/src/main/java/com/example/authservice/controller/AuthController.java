@@ -39,9 +39,9 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<JwtResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<LoginResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         logger.info("Token refresh request");
-        JwtResponse response = userService.refreshToken(request);
+        LoginResponse response = userService.refreshToken(request);
         return ResponseEntity.ok(response);
     }
 
