@@ -34,7 +34,6 @@ public class OrderController {
             @Valid @RequestBody CreateOrderRequest request,
             @RequestHeader("X-User-Id") String userId) {
         logger.info("Create order request from customer: {}", userId);
-
         OrderResponse response = orderService.createOrder(request, UUID.fromString(userId));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -52,7 +51,6 @@ public class OrderController {
             @RequestHeader("X-User-Id") String userId,
             Pageable pageable) {
         logger.info("Get my orders (paged) request from user: {}", userId);
-
         Page<OrderResponse> orders = orderService.getMyOrdersPaged(UUID.fromString(userId), pageable);
         return ResponseEntity.ok(orders);
     }
@@ -62,7 +60,6 @@ public class OrderController {
             @PathVariable UUID id,
             @RequestHeader("X-User-Id") String userId) {
         logger.info("Get order by ID request: {} from user: {}", id, userId);
-
         OrderResponse order = orderService.getOrderById(id, UUID.fromString(userId));
         return ResponseEntity.ok(order);
     }
@@ -72,7 +69,6 @@ public class OrderController {
             @PathVariable UUID restaurantId,
             @RequestHeader("X-User-Id") String userId) {
         logger.info("Get restaurant orders request for restaurant: {} from user: {}", restaurantId, userId);
-
         List<OrderResponse> orders = orderService.getRestaurantOrders(restaurantId, UUID.fromString(userId));
         return ResponseEntity.ok(orders);
     }
@@ -82,7 +78,6 @@ public class OrderController {
             @PathVariable UUID restaurantId,
             @RequestHeader("X-User-Id") String userId) {
         logger.info("Get restaurant pending orders request for restaurant: {} from user: {}", restaurantId, userId);
-
         List<OrderResponse> orders = orderService.getRestaurantPendingOrders(restaurantId, UUID.fromString(userId));
         return ResponseEntity.ok(orders);
     }
@@ -93,7 +88,6 @@ public class OrderController {
             @Valid @RequestBody UpdateOrderStatusRequest request,
             @RequestHeader("X-User-Id") String userId) {
         logger.info("Update order status request: {} to {} from user: {}", id, request.status(), userId);
-
         OrderResponse response = orderService.updateOrderStatus(id, request, UUID.fromString(userId));
         return ResponseEntity.ok(response);
     }
@@ -103,7 +97,6 @@ public class OrderController {
             @PathVariable UUID id,
             @RequestHeader("X-User-Id") String userId) {
         logger.info("Cancel order request: {} from user: {}", id, userId);
-
         orderService.cancelOrder(id, UUID.fromString(userId));
         return ResponseEntity.noContent().build();
     }

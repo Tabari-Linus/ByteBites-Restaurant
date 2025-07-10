@@ -68,13 +68,80 @@ bytebites:
     topics:
       order-events: order-events
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      restaurant-service:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        record-exceptions:
+          - com.bytebites.orderservice.exception.RestaurantValidationException
+          - java.util.concurrent.TimeoutException
+          - java.net.ConnectException
+
+      restaurant-menu:
+        sliding-window-size: 8
+        minimum-number-of-calls: 4
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 15s
+
+      restaurant-menu-item:
+        sliding-window-size: 6
+        minimum-number-of-calls: 3
+        failure-rate-threshold: 55
+        wait-duration-in-open-state: 12s
+
+  retry:
+    instances:
+      restaurant-service:
+        max-attempts: 3
+        wait-duration: 1s
+        exponential-backoff-multiplier: 2
+        enable-exponential-backoff: true
+        retry-exceptions:
+          - com.bytebites.orderservice.exception.RestaurantValidationException
+          - java.util.concurrent.TimeoutException
+          - java.net.ConnectException
+
+      restaurant-menu:
+        max-attempts: 2
+        wait-duration: 500ms
+
+      restaurant-menu-item:
+        max-attempts: 2
+        wait-duration: 800ms
+
+  timelimiter:
+    instances:
+      restaurant-service:
+        timeout-duration: 5s
+        cancel-running-future: true
+
+      restaurant-menu:
+        timeout-duration: 3s
+
+      restaurant-menu-item:
+        timeout-duration: 2s
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus,circuitbreakers,circuitbreakerevents,retryevents
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 logging:
   level:
     com.bytebites.order: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.kafka: DEBUG
+    io.github.resilience4j: DEBUG

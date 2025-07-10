@@ -5,6 +5,7 @@ import com.bytebites.restaurantservice.dto.RestaurantResponse;
 import com.bytebites.restaurantservice.dto.UpdateRestaurantRequest;
 import com.bytebites.restaurantservice.enums.RestaurantStatus;
 import com.bytebites.restaurantservice.event.RestaurantEventPublisher;
+import com.bytebites.restaurantservice.exception.RestaurantAlreadyExit;
 import com.bytebites.restaurantservice.exception.RestaurantNotFoundException;
 import com.bytebites.restaurantservice.exception.UnauthorizedOperationException;
 import com.bytebites.restaurantservice.mapper.RestaurantMapper;
@@ -48,13 +49,13 @@ public class RestaurantService {
     public RestaurantResponse createRestaurant(CreateRestaurantRequest request, UUID ownerId) {
         logger.info("Creating restaurant: {} for owner: {}", request.name(), ownerId);
 
-        
-        if (restaurantRepository.existsByOwnerIdAndName(ownerId, request.name())) {
-            throw new RuntimeException("Restaurant with name '" + request.name() + "' already exists");
+
+        if (restaurantRepository.existsByOwnerIdAndName(ownerId, request.name())){
+            throw new RestaurantAlreadyExit("Restaurant already exists for this owner");
         }
 
         Restaurant restaurant = restaurantMapper.toEntity(request, ownerId);
-        restaurant.setStatus(RestaurantStatus.ACTIVE);
+        restaurant.setStatus(RestaurantStatus.PENDING_APPROVAL);
         Restaurant savedRestaurant = restaurantRepository.save(restaurant);
 
         restaurantEventPublisher.publishRestaurantCreatedEvent(savedRestaurant);
@@ -103,7 +104,7 @@ public class RestaurantService {
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + id));
 
-        
+
         if (!securityService.isOwnerOrAdmin(currentUserId, restaurant.getOwnerId())) {
             throw new UnauthorizedOperationException("You are not authorized to update this restaurant");
         }
@@ -115,17 +116,19 @@ public class RestaurantService {
         return restaurantMapper.toResponse(updatedRestaurant);
     }
 
+
     public RestaurantResponse updateRestaurantStatus(UUID id, UpdateRestaurantRequest request, UUID currentUserId) {
         logger.info("Updating restaurant: {} by user: {}", id, currentUserId);
 
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + id));
 
-        if (!securityService.isAdmin(List.of(currentUserId.toString()))) {
-            throw new UnauthorizedOperationException("You are not authorized to update this restaurant");
+        if (!securityService.isAdmin(currentUserId)) {
+            throw new UnauthorizedOperationException("Only administrators can update restaurant status");
         }
 
         restaurantMapper.updateEntityFromRequest(request, restaurant);
+        restaurant.setStatus(RestaurantStatus.ACTIVE);
         Restaurant updatedRestaurant = restaurantRepository.save(restaurant);
 
         logger.info("Restaurant updated successfully: {}", id);
@@ -138,12 +141,12 @@ public class RestaurantService {
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + id));
 
-        
+
         if (!securityService.isOwnerOrAdmin(currentUserId, restaurant.getOwnerId())) {
             throw new UnauthorizedOperationException("You are not authorized to delete this restaurant");
         }
 
-        
+
         restaurant.setStatus(RestaurantStatus.INACTIVE);
         restaurantRepository.save(restaurant);
 

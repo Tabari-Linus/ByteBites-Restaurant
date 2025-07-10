@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -85,12 +84,10 @@ public class RestaurantController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RestaurantResponse> updateRestaurantStatus(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateRestaurantRequest request,
             @RequestHeader("X-User-Id") String userId) {
-
 
         RestaurantResponse response = restaurantService.updateRestaurantStatus(id, request, UUID.fromString(userId));
         return ResponseEntity.ok(response);

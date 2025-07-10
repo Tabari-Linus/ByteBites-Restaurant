@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -26,66 +27,40 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<SuccessMessage> register(@Valid @RequestBody RegisterRequest request) {
-        logger.info("Registration request for email: {}", request.email());
-
-        try {
-            JwtResponse response = userService.register(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessMessage("User registered successfully"));
-        } catch (RuntimeException e) {
-            logger.error("Registration failed for email: {}, error: {}", request.email(), e.getMessage());
-            throw e;
-        }
+        userService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessMessage("User registered successfully"));
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         logger.info("Login request for email: {}", request.email());
-
-        try {
-            LoginResponse response = userService.login(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            logger.error("Login failed for email: {}, error: {}", request.email(), e.getMessage());
-            throw e;
-        }
+        LoginResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<JwtResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<LoginResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
         logger.info("Token refresh request");
-
-        try {
-            JwtResponse response = userService.refreshToken(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            logger.error("Token refresh failed: {}", e.getMessage());
-            throw e;
-        }
+        LoginResponse response = userService.refreshToken(request);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/me")
     public ResponseEntity<UserInfo> getCurrentUser(@RequestHeader("X-User-Id") String userId) {
         logger.info("Get current user request for ID: {}", userId);
+        UserInfo userInfo = userService.getCurrentUser(UUID.fromString(userId));
+        return ResponseEntity.ok(userInfo);
+    }
 
-        try {
-            UserInfo userInfo = userService.getCurrentUser(UUID.fromString(userId));
-            return ResponseEntity.ok(userInfo);
-        } catch (RuntimeException e) {
-            logger.error("Get current user failed for ID: {}, error: {}", userId, e.getMessage());
-            throw e;
-        }
+    @GetMapping("/users/{userId}/roles")
+    public ResponseEntity<Set<String>> getRoles(@RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(userService.getRoles(UUID.fromString(userId)));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest request) {
         logger.info("Logout request");
-
-        try {
-            userService.logout(request.refreshToken());
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            logger.error("Logout failed: {}", e.getMessage());
-            throw e;
-        }
+        userService.logout(request.refreshToken());
+        return ResponseEntity.ok().build();
     }
 }

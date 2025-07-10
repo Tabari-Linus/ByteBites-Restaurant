@@ -9,6 +9,7 @@ import com.example.authservice.model.User;
 import com.example.authservice.repository.RefreshTokenRepository;
 import com.example.authservice.repository.RoleRepository;
 import com.example.authservice.repository.UserRepository;
+import jdk.jshell.spi.ExecutionControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -43,18 +44,25 @@ public class UserService {
         this.jwtService = jwtService;
     }
 
-    public JwtResponse register(RegisterRequest request) throws UserAlreadyExistsException, ValidationException {
+    public SuccessMessage register(RegisterRequest request) throws UserAlreadyExistsException, ValidationException {
         logger.info("Registering new user with email: {}", request.email());
-        validateRegistrationRequest(request);
-        User user = createUserWithDefaultRole(request);
-        User savedUser = userRepository.save(user);
-        logger.info("User registered successfully with ID: {}", savedUser.getId());
-        return jwtService.generateTokenResponse(savedUser);
+        try {
+            validateRegistrationRequest(request);
+            User user = createUserWithDefaultRole(request);
+            User savedUser = userRepository.save(user);
+            logger.info("User registered successfully with ID: {}", savedUser.getId());
+            return new SuccessMessage("User registered successfully") ;
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void validateRegistrationRequest(RegisterRequest request) throws ValidationException {
         if (request.email() == null || request.email().isEmpty()) {
             throw new ValidationException("Email cannot be null or empty");
+        }
+        if (userRepository.existsByEmail(request.email())) {
+            throw new UserAlreadyExistsException("User with email " + request.email() + " already exists");
         }
         if (request.password() == null || request.password().length() < 8) {
             throw new ValidationException("Password must be at least 8 characters long");
@@ -95,16 +103,21 @@ public class UserService {
         User user = userRepository.findByEmailWithRoles(request.email())
                 .orElseThrow(() -> new BadCredentialsException(INVALID_CREDENTIALS_MESSAGE));
 
-        validateLoginAttempt(user, request.password());
-        updateLastLogin(user);
+        try {
+            validateLoginAttempt(user, request.password());
+            updateLastLogin(user);
 
-        logger.info("User logged in successfully: {}", user.getId());
-        JwtResponse loginData = jwtService.generateTokenResponse(user);
-        return new LoginResponse(
-                loginData.accessToken(),
-                loginData.refreshToken(),
-                loginData.tokenType()
-        );
+            logger.info("User logged in successfully: {}", user.getId());
+            JwtResponse loginData = jwtService.generateTokenResponse(user);
+            return new LoginResponse(
+                    loginData.accessToken(),
+                    loginData.refreshToken(),
+                    loginData.tokenType()
+            );
+        }catch (RuntimeException e) {
+            logger.error("Login failed for email: {}, error: {}", request.email(), e.getMessage());
+            throw e;
+        }
     }
 
     private void validateLoginAttempt(User user, String password) throws AccountDisabledException {
@@ -121,7 +134,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public JwtResponse refreshToken(RefreshTokenRequest request) throws InvalidTokenException, TokenExpiredException {
+    public LoginResponse refreshToken(RefreshTokenRequest request) throws InvalidTokenException, TokenExpiredException {
         logger.info("Attempting to refresh token");
         RefreshToken refreshToken = refreshTokenRepository.findByToken(request.refreshToken())
                 .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
@@ -131,7 +144,17 @@ public class UserService {
             throw new TokenExpiredException("Refresh token is expired");
         }
 
-        return jwtService.generateTokenResponse(refreshToken.getUser());
+        try {
+            JwtResponse response =  jwtService.generateTokenResponse(refreshToken.getUser());
+            return new LoginResponse(
+                    response.accessToken(),
+                    request.refreshToken(),
+                    response.tokenType()
+            );
+        } catch (RuntimeException e) {
+            logger.error("Token refresh failed: {}", e.getMessage());
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -139,21 +162,38 @@ public class UserService {
         logger.info("Getting current user info for ID: {}", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
+        try {
+            return new UserInfo(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getRoles().stream()
+                            .map(role -> role.getName().toString())
+                            .collect(java.util.stream.Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            logger.error("Get current user failed for ID: {}, error: {}", userId, e.getMessage());
+            throw e;
+        }
+    }
 
-        return new UserInfo(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getRoles().stream()
-                        .map(role -> role.getName().toString())
-                        .collect(java.util.stream.Collectors.toSet())
-        );
+    public java.util.Set<String> getRoles(UUID userId) throws UserNotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return user.getRoles().stream()
+                .map(role -> role.getName().toString())
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     public void logout(String refreshToken) {
         logger.info("Logging out user");
-        refreshTokenRepository.findByToken(refreshToken)
-                .ifPresent(refreshTokenRepository::delete);
+        try {
+            refreshTokenRepository.findByToken(refreshToken)
+                    .ifPresent(refreshTokenRepository::delete);
+        } catch (RuntimeException e) {
+            logger.error("Logout failed: {}", e.getMessage());
+            throw e;
+        }
     }
 }
