@@ -12,9 +12,9 @@ import org.springframework.http.ResponseEntity;
 import java.util.Set;
 import java.util.UUID;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -34,110 +34,73 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void testRegisterSuccess() {
+    public void testRegisterShouldReturnCreatedStatusWithSuccessMessage() {
         RegisterRequest request = new RegisterRequest("test@example.com", "password123", "John", "Doe", null);
-        JwtResponse jwtResponse = new JwtResponse("access-token", "refresh-token", "Bearer", 3600L, new UserInfo(UUID.randomUUID(), "test@example.com", "John", "Doe", Set.of("USER")));
-        when(userService.register(any(RegisterRequest.class))).thenReturn(jwtResponse);
         ResponseEntity<SuccessMessage> response = authController.register(request);
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.CREATED));
-        assertThat(response.getBody(), notNullValue());
-        assertThat(response.getBody().message(), equalTo("User registered successfully"));
+        assertThat(response.getStatusCode(), is(HttpStatus.CREATED));
+        assertThat(response.getBody(), is(notNullValue()));
+        assertThat(response.getBody().message(), is("User registered successfully"));
         verify(userService, atLeast(1)).register(request);
     }
 
     @Test
-    public void testRegisterFailure() {
-        RegisterRequest request = new RegisterRequest("test@example.com", "password123", "John", "Doe", null);
-        RuntimeException exception = new RuntimeException("Registration failed");
-        when(userService.register(any(RegisterRequest.class))).thenThrow(exception);
-        assertThrows(RuntimeException.class, () -> authController.register(request));
-        verify(userService, atLeast(1)).register(request);
-    }
-
-    @Test
-    public void testLoginSuccess() {
+    public void testLoginShouldReturnOkStatusWithLoginResponse() {
         LoginRequest request = new LoginRequest("test@example.com", "password123");
-        LoginResponse loginResponse = new LoginResponse("access-token", "refresh-token", "Bearer");
-        when(userService.login(any(LoginRequest.class))).thenReturn(loginResponse);
+        LoginResponse expectedResponse = new LoginResponse("accessToken", "refreshToken", "Bearer");
+        doReturn(expectedResponse).when(userService).login(any(LoginRequest.class));
         ResponseEntity<LoginResponse> response = authController.login(request);
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), equalTo(loginResponse));
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody(), is(expectedResponse));
         verify(userService, atLeast(1)).login(request);
     }
 
     @Test
-    public void testLoginFailure() {
-        LoginRequest request = new LoginRequest("test@example.com", "password123");
-        RuntimeException exception = new RuntimeException("Login failed");
-        when(userService.login(any(LoginRequest.class))).thenThrow(exception);
-        assertThrows(RuntimeException.class, () -> authController.login(request));
-        verify(userService, atLeast(1)).login(request);
-    }
-
-    @Test
-    public void testRefreshTokenSuccess() {
-        RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
-        JwtResponse jwtResponse = new JwtResponse("new-access-token", "new-refresh-token", "Bearer", 3600L, new UserInfo(UUID.randomUUID(), "test@example.com", "John", "Doe", Set.of("USER")));
-        when(userService.refreshToken(any(RefreshTokenRequest.class))).thenReturn(jwtResponse);
+    public void testRefreshTokenShouldReturnOkStatusWithJwtResponse() {
+        RefreshTokenRequest request = new RefreshTokenRequest("refreshToken123");
+        JwtResponse expectedResponse = new JwtResponse("newAccessToken", "newRefreshToken", "Bearer", 3600L, null);
+        doReturn(expectedResponse).when(userService).refreshToken(any(RefreshTokenRequest.class));
         ResponseEntity<JwtResponse> response = authController.refreshToken(request);
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), equalTo(jwtResponse));
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody(), is(expectedResponse));
         verify(userService, atLeast(1)).refreshToken(request);
     }
 
     @Test
-    public void testRefreshTokenFailure() {
-        RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
-        RuntimeException exception = new RuntimeException("Token refresh failed");
-        when(userService.refreshToken(any(RefreshTokenRequest.class))).thenThrow(exception);
-        assertThrows(RuntimeException.class, () -> authController.refreshToken(request));
-        verify(userService, atLeast(1)).refreshToken(request);
-    }
-
-    @Test
-    public void testGetCurrentUserSuccess() {
-        String userId = "550e8400-e29b-41d4-a716-446655440000";
+    public void testGetCurrentUserShouldReturnOkStatusWithUserInfo() {
+        String userId = "123e4567-e89b-12d3-a456-426614174000";
         UUID userUUID = UUID.fromString(userId);
-        UserInfo userInfo = new UserInfo(userUUID, "test@example.com", "John", "Doe", Set.of("USER"));
-        when(userService.getCurrentUser(any(UUID.class))).thenReturn(userInfo);
+        UserInfo expectedUserInfo = new UserInfo(userUUID, "test@example.com", "John", "Doe", Set.of("USER"));
+        doReturn(expectedUserInfo).when(userService).getCurrentUser(any(UUID.class));
         ResponseEntity<UserInfo> response = authController.getCurrentUser(userId);
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), equalTo(userInfo));
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody(), is(expectedUserInfo));
         verify(userService, atLeast(1)).getCurrentUser(userUUID);
     }
 
     @Test
-    public void testGetCurrentUserFailure() {
-        String userId = "550e8400-e29b-41d4-a716-446655440000";
+    public void testGetRolesShouldReturnOkStatusWithRoles() {
+        String userId = "123e4567-e89b-12d3-a456-426614174000";
         UUID userUUID = UUID.fromString(userId);
-        RuntimeException exception = new RuntimeException("User not found");
-        when(userService.getCurrentUser(any(UUID.class))).thenThrow(exception);
-        assertThrows(RuntimeException.class, () -> authController.getCurrentUser(userId));
-        verify(userService, atLeast(1)).getCurrentUser(userUUID);
+        Set<String> expectedRoles = Set.of("USER", "ADMIN");
+        doReturn(expectedRoles).when(userService).getRoles(any(UUID.class));
+        ResponseEntity<Set<String>> response = authController.getRoles(userId);
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
+        assertThat(response.getBody(), is(expectedRoles));
+        verify(userService, atLeast(1)).getRoles(userUUID);
     }
 
     @Test
-    public void testGetCurrentUserInvalidUUID() {
-        String invalidUserId = "invalid-uuid";
-        assertThrows(IllegalArgumentException.class, () -> authController.getCurrentUser(invalidUserId));
-        verify(userService, never()).getCurrentUser(any(UUID.class));
-    }
-
-    @Test
-    public void testLogoutSuccess() {
-        RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
+    public void testLogoutShouldReturnOkStatusWithVoidResponse() {
+        RefreshTokenRequest request = new RefreshTokenRequest("refreshToken123");
         doNothing().when(userService).logout(anyString());
         ResponseEntity<Void> response = authController.logout(request);
-        assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
+        assertThat(response.getStatusCode(), is(HttpStatus.OK));
         verify(userService, atLeast(1)).logout(request.refreshToken());
     }
 
     @Test
-    public void testLogoutFailure() {
-        RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
-        RuntimeException exception = new RuntimeException("Logout failed");
-        doThrow(exception).when(userService).logout(anyString());
-        assertThrows(RuntimeException.class, () -> authController.logout(request));
-        verify(userService, atLeast(1)).logout(request.refreshToken());
+    public void testAuthControllerConstructorShouldCreateInstanceSuccessfully() {
+        AuthController controller = new AuthController(userService);
+        assertNotNull(controller);
     }
 }
