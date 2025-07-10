@@ -134,7 +134,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public JwtResponse refreshToken(RefreshTokenRequest request) throws InvalidTokenException, TokenExpiredException {
+    public LoginResponse refreshToken(RefreshTokenRequest request) throws InvalidTokenException, TokenExpiredException {
         logger.info("Attempting to refresh token");
         RefreshToken refreshToken = refreshTokenRepository.findByToken(request.refreshToken())
                 .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
@@ -143,8 +143,14 @@ public class UserService {
             refreshTokenRepository.delete(refreshToken);
             throw new TokenExpiredException("Refresh token is expired");
         }
+
         try {
-            return jwtService.generateTokenResponse(refreshToken.getUser());
+            JwtResponse response =  jwtService.generateTokenResponse(refreshToken.getUser());
+            return new LoginResponse(
+                    response.accessToken(),
+                    request.refreshToken(),
+                    response.tokenType()
+            );
         } catch (RuntimeException e) {
             logger.error("Token refresh failed: {}", e.getMessage());
             throw e;
