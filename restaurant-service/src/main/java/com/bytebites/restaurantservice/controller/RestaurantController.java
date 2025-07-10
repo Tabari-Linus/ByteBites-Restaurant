@@ -85,12 +85,10 @@ public class RestaurantController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RestaurantResponse> updateRestaurantStatus(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateRestaurantRequest request,
             @RequestHeader("X-User-Id") String userId) {
-
 
         RestaurantResponse response = restaurantService.updateRestaurantStatus(id, request, UUID.fromString(userId));
         return ResponseEntity.ok(response);
