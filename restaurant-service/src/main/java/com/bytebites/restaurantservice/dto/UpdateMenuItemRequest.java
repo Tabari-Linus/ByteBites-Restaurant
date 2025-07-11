@@ -13,5 +13,6 @@ public record UpdateMenuItemRequest(
 
         String category,
         Boolean available,
+        @Pattern(regexp = "^(http|https)://.*$", message = "Image URL must be valid")
         String imageUrl
 ) {}
