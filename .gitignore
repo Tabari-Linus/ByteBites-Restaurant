@@ -1,7 +1,8 @@
 .env
 ./env_variables.sh
 env_variables.sh
-
+./.baserock
+.idea
 ../*.HELP.md
 ./../*.HELP.md
 ./../target/

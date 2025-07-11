@@ -1,18 +1,19 @@
 # ByteBites-Restaurant
 
 A secure, cloud-native food restaurant platform built with Spring Boot 3.5.x and Java 21.
-
-## 🏗️ Architecture
+The ByteBites project is a well-structured microservices platform for food delivery, built using Spring Boot and Spring Cloud. The architecture demonstrates good understanding of microservices patterns, with proper separation of concerns, security implementation, and event-driven communication.
+## 1. Architecture
 
 - **Eureka Server** (Eureka) - Service registry
 - **Config Server** - Centralized configuration
 - **API Gateway** - Request routing and JWT validation
-- **Auth Service** - Authentication and authorization
+- **Auth Service** - Authentication, authorization, and User management
 - **Restaurant Service** - Restaurant and menu management
 - **Order Service** - Order processing
-- **Notification Service** - Event-driven notifications
-
-## 🚀 Quick Start
+- **Notification Service** - Event-driven notifications service with push notification
+- **Kafka & Kafka UI** - For event streaming and monitoring
+- **Data Layer** - PostgresSQL Database integration for AUth, Restaurant, Order, and Notification 
+## 2. Quick Start
 
 ### Prerequisites
 - Java 21
@@ -25,7 +26,6 @@ A secure, cloud-native food restaurant platform built with Spring Boot 3.5.x and
 ```bash
 git clone https://github.com/Tabari-Linus/ByteBites-Restaurant
 cd ByteBites-Restaurant
-./mvnw clean compile
 ````
 2. **Create .env file**
 ```bash
@@ -46,7 +46,7 @@ cd ByteBites-Restaurant
 # Build all services needed for local development
 docker-compose up -d
 ````
-4. **Run services in this order**
+4. **Start services in this order**
 ```bash
 # Terminal 1: Discovery Server
 cd discovery-server
@@ -76,7 +76,7 @@ cd services/order-service
 cd services/notification-service
 ./mvnw clean package spring-boot:run
 ```
-5. # End-to-End Execution flow
+5. **End-to-End Execution flow**
 ```bash
 # Register restaurant owner
 curl -X POST http://localhost:8080/auth/admin \
@@ -195,10 +195,29 @@ curl -X PUT "http://localhost:8080/api/orders/$ORDER_ID/status" \
     "status": "DELIVERED"
   }'
 ```
-5. ## 📈 Monitoring
+
+## 3. Sample API Endpoints
+
+Here are some of the key API endpoints and their required roles:
+
+| Endpoint                                   | Method | Role Required                                                                                   | Description                                          |
+|:-------------------------------------------|:-------|:------------------------------------------------------------------------------------------------|:-----------------------------------------------------|
+| `/auth/register`                           | POST   | Public                                                                                          | Register a new user.                                 |
+| `/auth/login`                              | POST   | Public                                                                                          | Authenticate and get JWT token.                      |
+| `/api/restaurants`                         | GET    | Authenticated                                                                                   | Get a list of all restaurants.                       |
+| `/api/restaurants`                         | POST   | `ROLE_RESTAURANT_OWNER`                                                                         | Create a new restaurant.                             |
+| `/api/restaurants/menu-items/{menuItemId}` | GET    | Authenticated (internal call from Order Service)                                                | Get details of a specific menu item.                 |
+| `/api/orders`                              | POST   | `ROLE_CUSTOMER`                                                                                 | Place a new food order.                              |
+| `/api/orders/{id}`                         | GET    | Resource owner (`ROLE_CUSTOMER`), `ROLE_RESTAURANT_OWNER` (for their restaurants), `ROLE_ADMIN` | Get details of a specific order.                     |
+| `/api/orders`                              | GET    | `ROLE_CUSTOMER`                                                                                 | Get all orders placed by the authenticated customer. |
+| `/ap/restaurant/{restaurantId}`            | GET    | `ROLE_RESTAURANT_OWNER`, `ROLE_ADMIN`                                                           | Get all orders for a specific restaurant.            |
+| `/auth/users`                              | GET    | `ROLE_ADMIN` only                                                                               | View all users (planned for admin service).          |
+
+---
+## 4. 📈 Monitoring
 - Health Endpoints: /actuator/health
 - Metrics: /actuator/metrics
-- Info: /actuator/inf
+- Info: /actuator/info
 
 ```bash
 # Verify Kafka is running
