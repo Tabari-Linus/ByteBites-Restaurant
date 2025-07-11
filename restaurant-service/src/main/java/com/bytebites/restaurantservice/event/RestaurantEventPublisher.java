@@ -32,7 +32,7 @@ public class RestaurantEventPublisher {
                     restaurant.getId(),
                     restaurant.getName(),
                     restaurant.getOwnerId(),
-                    "nubananaa@gmail.com",
+                    restaurant.getEmail(),
                     restaurant.getAddress(),
                     restaurant.getStatus().toString()
             );
