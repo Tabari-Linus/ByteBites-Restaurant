@@ -51,7 +51,7 @@ public class RestaurantService {
 
 
         if (restaurantRepository.existsByOwnerIdAndName(ownerId, request.name())){
-            throw new RestaurantAlreadyExit("Restaurant already exists for this owner");
+            throw new RestaurantAlreadyExit("Restaurant already exists for this owner with id "+ ownerId);
         }
 
         Restaurant restaurant = restaurantMapper.toEntity(request, ownerId);
